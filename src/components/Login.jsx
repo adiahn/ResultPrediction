@@ -21,46 +21,51 @@ function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-base-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-base-100 flex items-center justify-center p-4 sm:p-6 md:p-8">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="card w-full max-w-md bg-base-100 shadow-xl"
+        className="card w-full max-w-md bg-base-100 shadow-xl mx-4 sm:mx-0"
       >
-        <div className="card-body p-8">
+        <div className="card-body p-4 sm:p-6 md:p-8">
           {/* School Logo */}
-          <div className="flex flex-col items-center mb-8">
-            <div className="w-32 h-32 mb-4 bg-base-200 rounded-full flex items-center justify-center">
-              {/* Replace with actual logo */}
+          <div className="flex flex-col items-center mb-6 sm:mb-8">
+            <div className="w-24 h-24 sm:w-32 sm:h-32 mb-3 sm:mb-4 bg-base-200 rounded-full flex items-center justify-center shadow-inner">
               <img 
                 src="/huk-logo.png" 
                 alt="HUK Logo" 
-                className="w-24 h-24 object-contain"
+                className="w-20 h-20 sm:w-24 sm:h-24 object-contain transform hover:scale-105 transition-transform"
                 onError={(e) => {
                   e.target.onerror = null
                   e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0xMiAwYzYuNjIzIDAgMTIgNS4zNzcgMTIgMTJzLTUuMzc3IDEyLTEyIDEyLTEyLTUuMzc3LTEyLTEyIDUuMzc3LTEyIDEyLTEyem0wIDFjNi4wNzEgMCAxMSA0LjkyOSAxMSAxMXMtNC45MjkgMTEtMTEgMTEtMTEtNC45MjktMTEtMTEgNC45MjktMTEgMTEtMTF6bS0uMDUgMTcuMDFjLS41NTIgMC0xIC40NDgtMSAxczQ0OCAxIDEgMSAxLS40NDggMS0xLS40NDgtMS0xLTF6bTAtMTRjLS41NTIgMC0xIC40NDgtMSAxdjhoMmMuNTUyIDAgMS0uNDQ4IDEtMXYtOGMwLS41NTItLjQ0OC0xLTEtMXoiLz48L3N2Zz4='
                 }}
               />
             </div>
-            <h2 className="text-2xl font-bold text-center text-primary">
+            <motion.h2 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-xl sm:text-2xl font-bold text-center text-primary px-2"
+            >
               Hassan Usman Katsina Polytechnic
-            </h2>
-            <div className="divider my-2">Result Prediction System</div>
+            </motion.h2>
+            <div className="divider my-2 px-4">
+              <span className="text-sm sm:text-base text-gray-600">Result Prediction System</span>
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             <div className="form-control">
-              <label className="label">
+              <label className="label py-1">
                 <span className="label-text font-medium">Username</span>
               </label>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                  <FiUser />
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-hover:text-primary">
+                  <FiUser className="w-4 h-4 sm:w-5 sm:h-5" />
                 </span>
                 <input
                   type="text"
                   placeholder="Enter your username"
-                  className="input input-bordered w-full pl-10"
+                  className="input input-bordered w-full pl-10 h-10 sm:h-12 text-sm sm:text-base focus:input-primary"
                   value={credentials.username}
                   onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
                   required
@@ -69,17 +74,17 @@ function Login() {
             </div>
 
             <div className="form-control">
-              <label className="label">
+              <label className="label py-1">
                 <span className="label-text font-medium">Password</span>
               </label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                  <FiLock />
+              <div className="relative group">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-hover:text-primary">
+                  <FiLock className="w-4 h-4 sm:w-5 sm:h-5" />
                 </span>
                 <input
                   type="password"
                   placeholder="Enter your password"
-                  className="input input-bordered w-full pl-10"
+                  className="input input-bordered w-full pl-10 h-10 sm:h-12 text-sm sm:text-base focus:input-primary"
                   value={credentials.password}
                   onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
                   required
@@ -87,15 +92,17 @@ function Login() {
               </div>
             </div>
 
-            <button 
+            <motion.button 
               type="submit" 
-              className="btn btn-primary w-full"
+              className="btn btn-primary w-full h-10 sm:h-12 mt-6"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
               Login to Dashboard
-            </button>
+            </motion.button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-gray-600">
+          <div className="mt-6 text-center text-xs sm:text-sm text-gray-600">
             <p>© {new Date().getFullYear()} HUK Polytechnic. All rights reserved.</p>
           </div>
         </div>
