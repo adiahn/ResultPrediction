@@ -98,8 +98,22 @@ function Dashboard() {
       {/* Modern Navbar */}
       <div className="navbar bg-base-100 shadow-md sticky top-0 z-50">
         <div className="container mx-auto px-4">
-          <div className="flex-1">
-            <span className="text-xl font-bold text-primary">HUK Polytechnic</span>
+          <div className="flex-1 flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-base-200 flex items-center justify-center">
+              <img 
+                src="/huk-logo.png" 
+                alt="HUK Logo" 
+                className="w-10 h-10 object-contain"
+                onError={(e) => {
+                  e.target.onerror = null
+                  e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0xMiAwYzYuNjIzIDAgMTIgNS4zNzcgMTIgMTJzLTUuMzc3IDEyLTEyIDEyLTEyLTUuMzc3LTEyLTEyIDUuMzc3LTEyIDEyLTEyem0wIDFjNi4wNzEgMCAxMSA0LjkyOSAxMSAxMXMtNC45MjkgMTEtMTEgMTEtMTEtNC45MjktMTEtMTEgNC45MjktMTEgMTEtMTF6bS0uMDUgMTcuMDFjLS41NTIgMC0xIC40NDgtMSAxczQ0OCAxIDEgMSAxLS40NDggMS0xLS40NDgtMS0xLTF6bTAtMTRjLS41NTIgMC0xIC40NDgtMSAxdjhoMmMuNTUyIDAgMS0uNDQ4IDEtMXYtOGMwLS41NTItLjQ0OC0xLTEtMXoiLz48L3N2Zz4='
+                }}
+              />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xl font-bold text-primary">HUK Polytechnic</span>
+              <span className="text-xs text-gray-600">Result Prediction System</span>
+            </div>
           </div>
           <div className="flex items-center gap-4">
             <div className="badge badge-primary badge-outline">
@@ -107,9 +121,9 @@ function Dashboard() {
             </div>
             <button 
               onClick={logout} 
-              className="btn btn-ghost btn-sm"
+              className="btn btn-ghost btn-sm gap-2"
             >
-              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
               Logout
