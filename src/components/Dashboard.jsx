@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import StudentForm from './StudentForm'
 import FileUpload from './FileUpload'
@@ -7,6 +7,20 @@ import ResultDisplay from './ResultDisplay'
 function Dashboard() {
   const { user, logout } = useAuth()
   const [predictions, setPredictions] = useState([])
+  const [activeTab, setActiveTab] = useState('manual') // 'manual' or 'excel'
+
+  // Load predictions from localStorage on component mount
+  useEffect(() => {
+    const savedPredictions = localStorage.getItem(`predictions_${user.username}`)
+    if (savedPredictions) {
+      setPredictions(JSON.parse(savedPredictions))
+    }
+  }, [user.username])
+
+  // Save predictions to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem(`predictions_${user.username}`, JSON.stringify(predictions))
+  }, [predictions, user.username])
 
   const handlePrediction = (studentData) => {
     const prediction = {
@@ -14,10 +28,11 @@ function Dashboard() {
       predictedGrade: calculatePredictedGrade(studentData),
       suggestions: generateSuggestions(studentData),
       weaknesses: identifyWeaknesses(studentData),
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      id: Date.now() // Add unique ID for each prediction
     }
     
-    setPredictions([prediction, ...predictions])
+    setPredictions(prev => [prediction, ...prev])
   }
 
   const calculatePredictedGrade = (data) => {
@@ -73,46 +88,76 @@ function Dashboard() {
     return weaknesses
   }
 
+  // Add delete prediction functionality
+  const handleDeletePrediction = (predictionId) => {
+    setPredictions(prev => prev.filter(p => p.id !== predictionId))
+  }
+
   return (
-    <div className="min-h-screen bg-base-100">
-      <div className="navbar bg-primary text-primary-content sticky top-0 z-50 shadow-lg rounded-lg p-5">
-        <div className="flex-1">
-          <span className="text-xl font-bold">HUK Polytechnic</span>
-        </div>
-        <div className="flex-none gap-2">
-          <span className="text-sm">Welcome, {user.username}</span>
-          <button onClick={logout} className="btn btn-ghost btn-sm">
-            Logout
-          </button>
+    <div className="min-h-screen bg-gray-50">
+      {/* Modern Navbar */}
+      <div className="navbar bg-base-100 shadow-md sticky top-0 z-50">
+        <div className="container mx-auto px-4">
+          <div className="flex-1">
+            <span className="text-xl font-bold text-primary">HUK Polytechnic</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="badge badge-primary badge-outline">
+              {user.username}
+            </div>
+            <button 
+              onClick={logout} 
+              className="btn btn-ghost btn-sm"
+            >
+              <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              Logout
+            </button>
+          </div>
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold text-primary mb-8 text-center">
-          Student Result Prediction System
-        </h1>
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-primary mb-2">
+            Student Result Prediction System
+          </h1>
+          <p className="text-gray-600">Enter student data to generate performance predictions</p>
+        </div>
         
         <div className="grid lg:grid-cols-2 gap-8">
-          <div className="card bg-base-100 shadow-xl">
-            <div className="card-body">
-              <h2 className="card-title text-2xl mb-4">Manual Entry</h2>
-              <StudentForm onSubmit={handlePrediction} />
+          <div className="space-y-6">
+            <div className="tabs tabs-boxed justify-center">
+              <button 
+                className={`tab ${activeTab === 'manual' ? 'tab-active' : ''}`}
+                onClick={() => setActiveTab('manual')}
+              >
+                Manual Entry
+              </button>
+              <button 
+                className={`tab ${activeTab === 'excel' ? 'tab-active' : ''}`}
+                onClick={() => setActiveTab('excel')}
+              >
+                Excel Upload
+              </button>
             </div>
+            
+            {activeTab === 'manual' ? (
+              <StudentForm onSubmit={handlePrediction} />
+            ) : (
+              <FileUpload onDataProcessed={handlePrediction} />
+            )}
           </div>
           
-          <div className="card bg-base-100 shadow-xl">
-            <div className="card-body">
-              <h2 className="card-title text-2xl mb-4">Excel Upload</h2>
-              <FileUpload onDataProcessed={handlePrediction} />
-            </div>
+          <div className="space-y-6">
+            <h2 className="text-xl font-semibold text-primary">Recent Predictions</h2>
+            <ResultDisplay 
+              predictions={predictions} 
+              onDelete={handleDeletePrediction}
+            />
           </div>
         </div>
-
-        {predictions.length > 0 && (
-          <div className="mt-12">
-            <ResultDisplay predictions={predictions} />
-          </div>
-        )}
       </div>
     </div>
   )

@@ -14,7 +14,7 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="min-h-screen bg-base-100" data-theme="hukpoly">
+        <div className="" data-theme="hukpoly">
           <Toaster position="top-right" />
           <Routes>
             <Route path="/login" element={<Login />} />

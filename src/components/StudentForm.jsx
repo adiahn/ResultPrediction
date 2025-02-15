@@ -3,11 +3,10 @@ import toast from 'react-hot-toast'
 
 const SUBJECTS = [
   'Use of English',
-  'Databse Design',
+  'Database Design',
   'Frontend Development',
   'Backend Development',
   'Computer Networking',
-  'Backend Development',
   'Data Structures',
   'Algorithms',
   'Software Engineering',
@@ -104,153 +103,172 @@ function StudentForm({ onSubmit }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl mx-auto">
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div className="form-control">
-          <label className="label">
-            <span className="label-text font-medium">Student Name</span>
-          </label>
-          <input
-            type="text"
-            name="studentName"
-            value={formData.studentName}
-            onChange={handleChange}
-            className="w-[10vw] h-[5vh] text-[14px] input border-b border-gray-300 focus:outline-none focus:border-primary focus:ring-0"
-            required
-          />
-        </div>
+    <form onSubmit={handleSubmit} className="space-y-6 max-w-5xl mx-auto">
+      {/* Student Info Card */}
+      <div className="card bg-base-100 shadow-lg">
+        <div className="card-body p-4">
+          <h3 className="card-title text-primary text-lg mb-4">Student Information</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="form-control">
+              <label className="label py-1">
+                <span className="label-text text-sm font-medium">Full Name</span>
+              </label>
+              <input
+                type="text"
+                name="studentName"
+                value={formData.studentName}
+                onChange={handleChange}
+                className="input input-bordered input-sm focus:input-primary bg-gray-50"
+                placeholder="Enter student name"
+                required
+              />
+            </div>
 
-        <div className="form-control">
-          <label className="label">
-            <span className="label-text font-medium">Student ID</span>
-          </label>
-          <input
-            type="text"
-            name="studentId"
-            value={formData.studentId}
-            onChange={handleChange}
-            className="w-[10vw] h-[5vh] text-[14px] input border-b border-gray-300 focus:outline-none focus:border-primary focus:ring-0"
-            required
-          />
-        </div>
+            <div className="form-control">
+              <label className="label py-1">
+                <span className="label-text text-sm font-medium">Student ID</span>
+              </label>
+              <input
+                type="text"
+                name="studentId"
+                value={formData.studentId}
+                onChange={handleChange}
+                className="input input-bordered input-sm focus:input-primary bg-gray-50 font-mono"
+                placeholder="Enter ID number"
+                required
+              />
+            </div>
 
-        <div className="form-control">
-          <label className="label">
-            <span className="label-text font-medium">Department</span>
-          </label>
-          <input
-            type="text"
-            name="department"
-            value={formData.department}
-            onChange={handleChange}
-            className="w-[10vw] h-[5vh] text-[14px] input border-b border-gray-300 focus:outline-none focus:border-primary focus:ring-0"
-            required
-          />
-        </div>
+            <div className="form-control">
+              <label className="label py-1">
+                <span className="label-text text-sm font-medium">Department</span>
+              </label>
+              <select
+                name="department"
+                value={formData.department}
+                onChange={handleChange}
+                className="select select-bordered select-sm focus:select-primary bg-gray-50"
+                required
+              >
+                <option value="">Select Department</option>
+                <option value="Computer Science">Computer Science</option>
+                <option value="Information Technology">Information Technology</option>
+                <option value="Software Engineering">Software Engineering</option>
+              </select>
+            </div>
 
-        <div className="form-control">
-          <label className="label">
-            <span className="label-text font-medium">Level</span>
-          </label>
-          <select
-            name="level"
-            value={formData.level}
-            onChange={handleChange}
-            className="select select-bordered focus:select-primary"
-            required
-          >
-            <option value="">Select Level</option>
-            <option value="ND1">ND1</option>
-            <option value="ND2">ND2</option>
-            <option value="HND1">HND1</option>
-            <option value="HND2">HND2</option>
-          </select>
-        </div>
+            <div className="form-control">
+              <label className="label py-1">
+                <span className="label-text text-sm font-medium">Level</span>
+              </label>
+              <select
+                name="level"
+                value={formData.level}
+                onChange={handleChange}
+                className="select select-bordered select-sm focus:select-primary bg-gray-50"
+                required
+              >
+                <option value="">Select Level</option>
+                <option value="ND1">ND1</option>
+                <option value="ND2">ND2</option>
+                <option value="HND1">HND1</option>
+                <option value="HND2">HND2</option>
+              </select>
+            </div>
 
-        <div className="form-control">
-          <label className="label">
-            <span className="label-text font-medium">Attendance (%)</span>
-          </label>
-          <input
-            type="number"
-            name="attendance"
-            value={formData.attendance}
-            onChange={handleChange}
-            min="0"
-            max="100"
-            className="w-[10vw] h-[5vh] text-[14px] input border-b border-gray-300 focus:outline-none focus:border-primary focus:ring-0"
-            required
-          />
+            <div className="form-control">
+              <label className="label py-1">
+                <span className="label-text text-sm font-medium">Attendance (%)</span>
+              </label>
+              <input
+                type="number"
+                name="attendance"
+                value={formData.attendance}
+                onChange={handleChange}
+                min="0"
+                max="100"
+                className="input input-bordered input-sm focus:input-primary bg-gray-50"
+                placeholder="Enter attendance %"
+                required
+              />
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="divider text-lg font-semibold">Subject Scores</div>
-
-      <div className="grid gap-8">
-        {SUBJECTS.map(subject => (
-          <div key={subject} className="card bg-base-200 shadow-sm">
-            <div className="card-body">
-              <h3 className="card-title text-primary">{subject}</h3>
-              <div className="grid md:grid-cols-3 gap-4">
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text">First CA (20%)</span>
-                  </label>
-                  <input
-                    type="number"
+      {/* Subject Scores Card */}
+      <div className="card bg-base-100 shadow-lg">
+        <div className="card-body p-4">
+          <h3 className="card-title text-primary text-lg mb-4">Subject Scores</h3>
+          <div className="grid gap-6">
+            {SUBJECTS.map(subject => (
+              <div key={subject} className="bg-gray-50 rounded-lg p-4 transition-all hover:shadow-md">
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-medium text-gray-700">{subject}</h4>
+                  <div className="badge badge-primary badge-outline">
+                    Total: {
+                      (formData.subjects[subject].firstCA || 0) + 
+                      (formData.subjects[subject].secondCA || 0) + 
+                      (formData.subjects[subject].score || 0)
+                    }%
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Score inputs with modern styling */}
+                  <ScoreInput
+                    label="First CA (20%)"
                     name={`subject-${subject}-firstCA`}
                     value={formData.subjects[subject].firstCA}
                     onChange={handleChange}
-                    min="0"
-                    max="20"
-                    className="w-[7vw] bg-transparent border-white h-[6vh] input input-bordered focus:input-primary"
-                    required
+                    max={20}
                   />
-                </div>
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text">Second CA (20%)</span>
-                  </label>
-                  <input
-                    type="number"
+                  <ScoreInput
+                    label="Second CA (20%)"
                     name={`subject-${subject}-secondCA`}
                     value={formData.subjects[subject].secondCA}
                     onChange={handleChange}
-                    min="0"
-                    max="20"
-                    className="w-[7vw] bg-transparent border-white h-[6vh] input input-bordered focus:input-primary"
-                    required
+                    max={20}
                   />
-                </div>
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text">Exam Score (60%)</span>
-                  </label>
-                  <input
-                    type="number"
+                  <ScoreInput
+                    label="Exam Score (60%)"
                     name={`subject-${subject}-score`}
                     value={formData.subjects[subject].score}
                     onChange={handleChange}
-                    min="0"
-                    max="60"
-                    className="w-[7vw] bg-transparent border-white h-[6vh] input input-bordered focus:input-primary"
-                    required
+                    max={60}
                   />
                 </div>
               </div>
-            </div>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
 
       <button
         type="submit"
-        className="btn btn-primary w-full max-w-md mx-auto mt-8"
+        className="btn btn-primary w-full max-w-xs mx-auto"
       >
         Submit Assessment
       </button>
     </form>
   )
 }
+
+const ScoreInput = ({ label, name, value, onChange, max }) => (
+  <div className="form-control">
+    <label className="label py-0.5">
+      <span className="label-text text-xs font-medium text-gray-600">{label}</span>
+    </label>
+    <input
+      type="number"
+      name={name}
+      value={value}
+      onChange={onChange}
+      min="0"
+      max={max}
+      className="input input-bordered input-sm focus:input-primary bg-white"
+      required
+    />
+  </div>
+)
 
 export default StudentForm

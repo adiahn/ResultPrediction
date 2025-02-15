@@ -20,9 +20,9 @@ function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-base-100">
-      <div className="card w-96 bg-base-100 shadow-xl">
-        <div className="card-body">
+    <div className="flex items-center justify-center bg-base-100">
+      <div className="w-[30vw] p-10 rounded shadow-xl">
+        <div className="card-bod">
           <h2 className="card-title text-2xl font-bold text-center mb-6">
             Hassan Usman Katsina Polytechnic
           </h2>
