@@ -56,17 +56,27 @@ function StudentForm({ onSubmit }) {
   const handleSubmit = (e) => {
     e.preventDefault()
     
-    // Calculate final scores and validate
+    // Keep the original subject structure instead of just totals
     const processedSubjects = {}
     let isValid = true
 
     Object.entries(formData.subjects).forEach(([subject, scores]) => {
-      const total = (scores.firstCA || 0) + (scores.secondCA || 0) + (scores.score || 0)
+      const firstCA = Number(scores.firstCA) || 0
+      const secondCA = Number(scores.secondCA) || 0
+      const examScore = Number(scores.score) || 0
+      const total = firstCA + secondCA + examScore
+      
       if (total > 100) {
         toast.error(`Total score for ${subject} cannot exceed 100`)
         isValid = false
       }
-      processedSubjects[subject] = total
+      
+      // Keep the original structure with individual scores
+      processedSubjects[subject] = {
+        firstCA,
+        secondCA,
+        score: examScore
+      }
     })
 
     if (!isValid) return
