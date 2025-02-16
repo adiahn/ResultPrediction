@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import toast from 'react-hot-toast'
 import { motion } from 'framer-motion'
 import { FiUser, FiLock } from 'react-icons/fi'
+import logo from '../assets/logo.jpeg'
 
 function Login() {
   const { login } = useAuth()
@@ -33,7 +34,7 @@ function Login() {
           <div className="flex flex-col items-center mb-6 sm:mb-8">
             <div className="w-24 h-24 sm:w-32 sm:h-32 mb-3 sm:mb-4 bg-base-200 rounded-full flex items-center justify-center shadow-inner">
               <img 
-                src="/huk-logo.png" 
+                src={logo} 
                 alt="HUK Logo" 
                 className="w-20 h-20 sm:w-24 sm:h-24 object-contain transform hover:scale-105 transition-transform"
                 onError={(e) => {
