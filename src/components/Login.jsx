@@ -23,20 +23,18 @@ function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-base-100 flex items-center justify-center p-4 sm:p-6 md:p-8">
+    <div className="flex justify-center items-center">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="card w-full max-w-md bg-base-100 shadow-xl mx-4 sm:mx-0"
       >
-        <div className="card-body p-4 sm:p-6 md:p-8">
-          {/* School Logo */}
-          <div className="flex flex-col items-center mb-6 sm:mb-8">
-            <div className="w-24 h-24 sm:w-32 sm:h-32 mb-3 sm:mb-4 bg-base-200 rounded-full flex items-center justify-center shadow-inner">
+          <div className="flex flex-col items-center mb-2 sm:mb-2">
+            <div className="w-24 h-24 sm:w-32 sm:h-32 mb-3 sm:mb-4 rounded-full flex items-center justify-center">
               <img 
                 src={logo} 
                 alt="HUK Logo" 
-                className="w-20 h-20 sm:w-24 sm:h-24 object-contain transform hover:scale-105 transition-transform"
+                className="w-20 h-20 sm:w-24 sm:h-24 object-contain transform hover:scale-105 transition-transform rounded-full"
                 onError={(e) => {
                   e.target.onerror = null
                   e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0xMiAwYzYuNjIzIDAgMTIgNS4zNzcgMTIgMTJzLTUuMzc3IDEyLTEyIDEyLTEyLTUuMzc3LTEyLTEyIDUuMzc3LTEyIDEyLTEyem0wIDFjNi4wNzEgMCAxMSA0LjkyOSAxMSAxMXMtNC45MjkgMTEtMTEgMTEtMTEtNC45MjktMTEtMTEgNC45MjktMTEgMTEtMTF6bS0uMDUgMTcuMDFjLS41NTIgMC0xIC40NDgtMSAxczQ0OCAxIDEgMSAxLS40NDggMS0xLS40NDgtMS0xLTF6bTAtMTRjLS41NTIgMC0xIC40NDgtMSAxdjhoMmMuNTUyIDAgMS0uNDQ4IDEtMXYtOGMwLS41NTItLjQ0OC0xLTEtMXoiLz48L3N2Zz4='
@@ -106,7 +104,6 @@ function Login() {
 
           <div className="mt-6 text-center text-xs sm:text-sm text-gray-600">
             <p>© {new Date().getFullYear()} HUK Polytechnic. All rights reserved.</p>
-          </div>
         </div>
       </motion.div>
     </div>
