@@ -204,7 +204,7 @@ function StudentForm({ onSubmit }) {
             {SUBJECTS.map(subject => (
               <div key={subject} className="bg-gray-50 rounded-lg p-4 transition-all hover:shadow-md">
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-medium text-gray-700">{subject}</h4>
+                  <h4 className="font-medium text-  gray-700">{subject}</h4>
                   <div className="badge badge-primary badge-outline">
                     Total: {
                       (formData.subjects[subject].firstCA || 0) + 

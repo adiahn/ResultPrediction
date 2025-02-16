@@ -7,7 +7,24 @@ import './App.css'
 
 function PrivateRoute({ children }) {
   const { user } = useAuth()
-  return user ? children : <Navigate to="/login" />
+  
+  if (!user) {
+    // Redirect to login if not authenticated
+    return <Navigate to="/login" replace />
+  }
+
+  return children
+}
+
+function PublicRoute({ children }) {
+  const { user } = useAuth()
+  
+  if (user) {
+    // Redirect to dashboard if already authenticated
+    return <Navigate to="/" replace />
+  }
+
+  return children
 }
 
 function App() {
@@ -15,9 +32,25 @@ function App() {
     <AuthProvider>
       <Router>
         <div className="" data-theme="hukpoly">
-          <Toaster position="top-right" />
+          <Toaster 
+            position="top-right"
+            toastOptions={{
+              duration: 3000,
+              style: {
+                background: '#333',
+                color: '#fff',
+              },
+            }} 
+          />
           <Routes>
-            <Route path="/login" element={<Login />} />
+            <Route 
+              path="/login" 
+              element={
+                <PublicRoute>
+                  <Login />
+                </PublicRoute>
+              } 
+            />
             <Route
               path="/*"
               element={

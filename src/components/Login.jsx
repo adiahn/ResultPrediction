@@ -15,8 +15,9 @@ function Login() {
     e.preventDefault()
     try {
       await login(credentials)
+      // Login successful - navigation is handled by PrivateRoute
     } catch (error) {
-      toast.error('Invalid credentials')
+      toast.error('Invalid username or password')
     }
   }
 

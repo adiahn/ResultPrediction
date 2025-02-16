@@ -3,6 +3,8 @@ import { useAuth } from '../context/AuthContext'
 import StudentForm from './StudentForm'
 import FileUpload from './FileUpload'
 import ResultDisplay from './ResultDisplay'
+import logo from '../assets/logo.jpeg'
+
 
 function Dashboard() {
   const { user, logout } = useAuth()
@@ -99,11 +101,11 @@ function Dashboard() {
       <div className="navbar bg-base-100 shadow-md sticky top-0 z-50">
         <div className="container mx-auto px-4">
           <div className="flex-1 flex items-center gap-2 sm:gap-4">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-base-200 flex items-center justify-center">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center">
               <img 
-                src="/huk-logo.png" 
+                src={logo}
                 alt="HUK Logo" 
-                className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
+                className="w-8 h-8 sm:w-10 sm:h-10 object-contain rounded-full"
                 onError={(e) => {
                   e.target.onerror = null
                   e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0xMiAwYzYuNjIzIDAgMTIgNS4zNzcgMTIgMTJzLTUuMzc3IDEyLTEyIDEyLTEyLTUuMzc3LTEyLTEyIDUuMzc3LTEyIDEyLTEyem0wIDFjNi4wNzEgMCAxMSA0LjkyOSAxMSAxMXMtNC45MjkgMTEtMTEgMTEtMTEtNC45MjktMTEtMTEgNC45MjktMTEgMTEtMTF6bS0uMDUgMTcuMDFjLS41NTIgMC0xIC40NDgtMSAxczQ0OCAxIDEgMSAxLS40NDggMS0xLS40NDgtMS0xLTF6bTAtMTRjLS41NTIgMC0xIC40NDgtMSAxdjhoMmMuNTUyIDAgMS0uNDQ4IDEtMXYtOGMwLS41NTItLjQ0OC0xLTEtMXoiLz48L3N2Zz4='
