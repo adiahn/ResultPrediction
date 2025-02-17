@@ -66,13 +66,11 @@ function FileUpload({ onDataProcessed }) {
         return false
       }
 
-      // Validate attendance
       if (student.attendance < 0 || student.attendance > 100) {
         toast.error('Invalid attendance percentage')
         return false
       }
 
-      // Validate subject scores
       for (const subject of Object.values(student.subjects)) {
         if (
           subject.firstCA < 0 || subject.firstCA > 20 ||
