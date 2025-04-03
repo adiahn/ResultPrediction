@@ -119,7 +119,7 @@ function Dashboard() {
             </div>
             <div className="flex flex-col">
               <span className="text-sm sm:text-xl font-bold text-primary truncate">HUK Polytechnic</span>
-              <span className="text-xs text-gray-600 hidden sm:block">Result Prediction System</span>
+              <span className="text-xs text-gray-600 hidden sm:block">Result Processing System</span>
             </div>
           </div>
           <div className="flex items-center gap-2 sm:gap-4">
@@ -142,9 +142,9 @@ function Dashboard() {
       <div className="container mx-auto px-4 py-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-primary mb-2">
-            Student Result Prediction System
+            Student Result Processing System
           </h1>
-          <p className="text-gray-600">Enter student data to generate performance predictions</p>
+          <p className="text-gray-600">Enter student data to generate student result</p>
         </div>
         
         <div className="grid lg:grid-cols-2 gap-8">
@@ -172,7 +172,7 @@ function Dashboard() {
           </div>
           
           <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-primary">Recent Predictions</h2>
+            <h2 className="text-xl font-semibold text-primary">Recent Result</h2>
             <ResultDisplay 
               predictions={predictions} 
               onDelete={handleDeletePrediction}

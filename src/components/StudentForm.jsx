@@ -5,8 +5,6 @@ const SUBJECTS = [
   'Use of English',
   'Database Design',
   'Frontend Development',
-  'Backend Development',
-  'Computer Networking',
   'Data Structures',
   'Algorithms',
   'Software Engineering',
@@ -233,7 +231,7 @@ function StudentForm({ onSubmit }) {
                     max={20}
                   />
                   <ScoreInput
-                    label="Second CA (20%)"
+                    label="Others (20%)"
                     name={`subject-${subject}-secondCA`}
                     value={formData.subjects[subject].secondCA}
                     onChange={handleChange}

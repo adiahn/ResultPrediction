@@ -12,7 +12,7 @@ import {
 import { Radar } from 'react-chartjs-2'
 import jsPDF from 'jspdf'
 import 'jspdf-autotable'
-import { FiDownload, FiTrash2, FiAward, FiBarChart2, FiBook, FiCalendar, FiChevronDown, FiChevronUp } from 'react-icons/fi'
+import { FiDownload, FiTrash2, FiAward, FiBarChart2, FiBook, FiCalendar, FiChevronDown, FiChevronUp, FiX } from 'react-icons/fi'
 import { useState } from 'react'
 
 ChartJS.register(
@@ -25,7 +25,7 @@ ChartJS.register(
 )
 
 function ResultDisplay({ predictions, onDelete }) {
-  const [expandedResults, setExpandedResults] = useState({})
+  const [expandedResultId, setExpandedResultId] = useState(null)
 
   if (!predictions || predictions.length === 0) {
     return (
@@ -35,11 +35,12 @@ function ResultDisplay({ predictions, onDelete }) {
     )
   }
 
-  const toggleExpand = (id) => {
-    setExpandedResults(prev => ({
-      ...prev,
-      [id]: !prev[id]
-    }))
+  const openResultModal = (id) => {
+    setExpandedResultId(id)
+  }
+
+  const closeResultModal = () => {
+    setExpandedResultId(null)
   }
 
   const calculateTotalScore = (subject) => {
@@ -49,58 +50,117 @@ function ResultDisplay({ predictions, onDelete }) {
     return firstCA + secondCA + examScore
   }
 
+  const getGrade = (score) => {
+    if (score >= 70) return 'A'
+    if (score >= 60) return 'B'
+    if (score >= 50) return 'C'
+    if (score >= 45) return 'D'
+    if (score >= 40) return 'E'
+    return 'F'
+  }
+
+  const getGradePoint = (score) => {
+    if (score >= 70) return 5.0
+    if (score >= 60) return 4.0
+    if (score >= 50) return 3.0
+    if (score >= 45) return 2.0
+    if (score >= 40) return 1.0
+    return 0.0
+  }
+
+  const calculateCreditUnits = (subject) => {
+    // Default credit unit value (could be customized based on actual subject data)
+    return 3
+  }
+
   const calculateOverallPerformance = (prediction) => {
-    console.log('Calculating performance for prediction:', prediction) // Debugging log
-    const subjectScores = Object.entries(prediction.subjects).map(([subject, scores]) => ({
-      subject,
-      firstCA: Number(scores.firstCA) || 0,
-      secondCA: Number(scores.secondCA) || 0,
-      examScore: Number(scores.score) || 0,
-      total: calculateTotalScore(scores)
-    }))
+    const subjectScores = Object.entries(prediction.subjects).map(([subject, scores]) => {
+      const total = calculateTotalScore(scores)
+      const creditUnits = calculateCreditUnits(subject)
+      const gradePoint = getGradePoint(total)
+      const weightedPoints = gradePoint * creditUnits
+      
+      return {
+        subject,
+        firstCA: Number(scores.firstCA) || 0,
+        secondCA: Number(scores.secondCA) || 0,
+        examScore: Number(scores.score) || 0,
+        total,
+        creditUnits,
+        gradePoint,
+        weightedPoints
+      }
+    })
 
     const totalScores = subjectScores.map(s => s.total)
-    const average = totalScores.reduce((a, b) => a + b, 0) / totalScores.length
+    const totalCreditUnits = subjectScores.reduce((sum, s) => sum + s.creditUnits, 0)
+    const totalWeightedPoints = subjectScores.reduce((sum, s) => sum + s.weightedPoints, 0)
+    
+    // Calculate GPA for this semester
+    const gpa = totalWeightedPoints / totalCreditUnits
+    
+    // For CGPA calculation, we would need previous semesters' data
+    // For now, we'll assume this is the first semester or use a placeholder
+    const cgpa = prediction.previousCGPA ? 
+      ((prediction.previousCGPA * prediction.previousCreditUnits) + totalWeightedPoints) / 
+      (prediction.previousCreditUnits + totalCreditUnits) : 
+      gpa
 
-    console.log('Subject scores:', subjectScores) // Debugging log
-    console.log('Total scores:', totalScores) // Debugging log
-    console.log('Average score:', average) // Debugging log
+    const average = totalScores.reduce((a, b) => a + b, 0) / totalScores.length
 
     return {
       average: average.toFixed(2),
-      passed: totalScores.filter(score => score >= 50).length,
-      failed: totalScores.filter(score => score < 50).length,
+      passed: totalScores.filter(score => score >= 40).length,
+      failed: totalScores.filter(score => score < 40).length,
       highest: Math.max(...totalScores).toFixed(2),
       lowest: Math.min(...totalScores).toFixed(2),
       attendance: prediction.attendance || 0,
       predictedGrade: prediction.predictedGrade,
       subjectAnalysis: subjectScores,
+      gpa: gpa.toFixed(2),
+      cgpa: cgpa.toFixed(2),
+      totalCreditUnits,
+      totalWeightedPoints: totalWeightedPoints.toFixed(2),
       studentId: prediction.studentId,
       timestamp: new Date(prediction.timestamp).toLocaleDateString()
     }
   }
 
   const getPerformanceColor = (score) => {
-    if (score >= 75) return 'text-success'
-    if (score >= 60) return 'text-warning'
+    if (score >= 70) return 'text-success'
+    if (score >= 50) return 'text-warning'
+    if (score >= 40) return 'text-info'
+    return 'text-error'
+  }
+
+  const getGPAColor = (gpa) => {
+    if (gpa >= 4.5) return 'text-success'
+    if (gpa >= 3.5) return 'text-primary'
+    if (gpa >= 2.5) return 'text-warning'
+    if (gpa >= 1.0) return 'text-info'
     return 'text-error'
   }
 
   const handleDownloadCSV = () => {
     const csvContent = [
-      ['Student Name', 'Student ID', 'Department', 'Level', 'Predicted Grade', 'Attendance', ...Object.keys(predictions[0].subjects), 'Suggestions', 'Weaknesses', 'Timestamp'].join(','),
-      ...predictions.map(p => [
-        p.studentName,
-        p.studentId,
-        p.department,
-        p.level,
-        p.predictedGrade,
-        p.attendance,
-        ...Object.values(p.subjects),
-        `"${p.suggestions.join('; ')}"`,
-        `"${p.weaknesses.join('; ')}"`,
-        p.timestamp
-      ].join(','))
+      ['Student Name', 'Student ID', 'Department', 'Level', 'GPA', 'CGPA', 'Predicted Grade', 'Attendance', ...Object.keys(predictions[0].subjects), 'Suggestions', 'Weaknesses', 'Timestamp'].join(','),
+      ...predictions.map(p => {
+        const performance = calculateOverallPerformance(p)
+        return [
+          p.studentName,
+          p.studentId,
+          p.department,
+          p.level,
+          performance.gpa,
+          performance.cgpa,
+          p.predictedGrade,
+          p.attendance,
+          ...Object.values(p.subjects),
+          `"${p.suggestions.join('; ')}"`,
+          `"${p.weaknesses.join('; ')}"`,
+          p.timestamp
+        ].join(',')
+      })
     ].join('\n')
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' })
@@ -108,6 +168,7 @@ function ResultDisplay({ predictions, onDelete }) {
   }
 
   const handleDownloadPDF = (prediction) => {
+    const performance = calculateOverallPerformance(prediction)
     const doc = new jsPDF()
     
     // Add header
@@ -120,23 +181,37 @@ function ResultDisplay({ predictions, onDelete }) {
     doc.text(`ID: ${prediction.studentId}`, 20, 40)
     doc.text(`Department: ${prediction.department}`, 20, 50)
     doc.text(`Level: ${prediction.level}`, 20, 60)
-    doc.text(`Predicted Grade: ${prediction.predictedGrade}`, 20, 70)
+    doc.text(`GPA: ${performance.gpa}`, 20, 70)
+    doc.text(`CGPA: ${performance.cgpa}`, 110, 70)
+    doc.text(`Predicted Grade: ${prediction.predictedGrade}`, 20, 80)
     
     // Add subject scores
-    const tableData = Object.entries(prediction.subjects).map(([subject, data]) => [
-      subject,
-      data.firstCA,
-      data.secondCA,
-      data.score,
-      data.firstCA + data.secondCA + data.score,
-      (data.firstCA + data.secondCA + data.score) >= 50 ? 'Pass' : 'Fail'
-    ])
+    const tableData = performance.subjectAnalysis.map(subjectData => {
+      return [
+        subjectData.subject,
+        subjectData.firstCA,
+        subjectData.secondCA,
+        subjectData.examScore,
+        subjectData.total,
+        getGrade(subjectData.total),
+        subjectData.creditUnits,
+        subjectData.gradePoint.toFixed(1),
+        subjectData.weightedPoints.toFixed(1),
+        subjectData.total >= 40 ? 'Pass' : 'Fail'
+      ]
+    })
     
     doc.autoTable({
-      startY: 80,
-      head: [['Subject', 'First CA', 'Second CA', 'Exam', 'Total', 'Status']],
+      startY: 90,
+      head: [['Subject', 'First CA', 'Second CA', 'Exam', 'Total', 'Grade', 'CU', 'GP', 'WP', 'Status']],
       body: tableData,
     })
+    
+    // Add summary
+    const finalY = doc.lastAutoTable.finalY + 10
+    doc.text(`GPA: ${performance.gpa}`, 20, finalY)
+    doc.text(`CGPA: ${performance.cgpa}`, 80, finalY)
+    doc.text(`Total Credit Units: ${performance.totalCreditUnits}`, 140, finalY)
     
     doc.save(`${prediction.studentName}_report.pdf`)
   }
@@ -170,6 +245,11 @@ function ResultDisplay({ predictions, onDelete }) {
     maintainAspectRatio: false,
   }
 
+  const currentPrediction = expandedResultId ? 
+    predictions.find(p => p.id === expandedResultId) : null
+  const currentPerformance = currentPrediction ? 
+    calculateOverallPerformance(currentPrediction) : null
+
   return (
     <div className="space-y-4">
       <div className="flex justify-end gap-2">
@@ -182,164 +262,281 @@ function ResultDisplay({ predictions, onDelete }) {
         </button>
       </div>
 
-      <AnimatePresence>
-        {predictions.map(prediction => {
-          const performance = calculateOverallPerformance(prediction)
-          const isExpanded = expandedResults[prediction.id]
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <AnimatePresence>
+          {predictions.map(prediction => {
+            const performance = calculateOverallPerformance(prediction)
+            const averageGrade = getGrade(Number(performance.average))
 
-          return (
-            <motion.div
-              key={prediction.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="card bg-base-100 shadow-lg"
-            >
-              <div className="card-body">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-lg font-semibold">{prediction.studentName}</h3>
-                    <p className="text-sm text-gray-500">ID: {prediction.studentId}</p>
-                    <p className="text-sm text-gray-500">{prediction.department} - Level {prediction.level}</p>
+            return (
+              <motion.div
+                key={prediction.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="card bg-base-100 shadow-lg"
+              >
+                <div className="card-body">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-lg font-semibold">{prediction.studentName}</h3>
+                      <p className="text-sm text-gray-500">ID: {prediction.studentId}</p>
+                      <p className="text-sm text-gray-500">{prediction.department} - Level {prediction.level}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => handleDownloadPDF(prediction)}
+                        className="btn btn-ghost btn-sm"
+                      >
+                        <FiDownload className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => onDelete(prediction.id)}
+                        className="btn btn-ghost btn-sm text-error"
+                      >
+                        <FiTrash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
-                  <button
-                    onClick={() => onDelete(prediction.id)}
-                    className="btn btn-ghost btn-sm text-error"
+
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+                    <StatCard
+                      icon={<FiBarChart2 />}
+                      label="GPA"
+                      value={performance.gpa}
+                      className={getGPAColor(Number(performance.gpa))}
+                    />
+                    <StatCard
+                      icon={<FiBarChart2 />}
+                      label="CGPA"
+                      value={performance.cgpa}
+                      className={getGPAColor(Number(performance.cgpa))}
+                    />
+                    <StatCard
+                      icon={<FiAward />}
+                      label="Subjects Status"
+                      value={`${performance.passed}/${performance.passed + performance.failed}`}
+                      subtext={`${((performance.passed/(performance.passed + performance.failed)) * 100).toFixed(1)}% Pass Rate`}
+                    />
+                  </div>
+
+                  {/* View Details Button */}
+                  <button 
+                    onClick={() => openResultModal(prediction.id)}
+                    className="btn btn-primary btn-sm w-full mt-4 gap-2"
                   >
-                    <FiTrash2 className="w-4 h-4" />
+                    <span>View Detailed Analysis</span>
+                    <FiChevronDown className="w-4 h-4" />
                   </button>
                 </div>
+              </motion.div>
+            )
+          })}
+        </AnimatePresence>
+      </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                  <StatCard
-                    icon={<FiBarChart2 />}
-                    label="Average Score"
-                    value={`${performance.average}%`}
-                    className={getPerformanceColor(Number(performance.average))}
-                  />
-                  <StatCard
-                    icon={<FiAward />}
-                    label="Subjects Status"
-                    value={`${performance.passed}/${performance.passed + performance.failed}`}
-                    subtext={`${((performance.passed/(performance.passed + performance.failed)) * 100).toFixed(1)}% Pass Rate`}
-                  />
-                  <StatCard
-                    icon={<FiBook />}
-                    label="Attendance"
-                    value={`${prediction.attendance}%`}
-                    className={prediction.attendance >= 75 ? 'text-success' : 'text-warning'}
-                  />
-                  <StatCard
-                    icon={<FiCalendar />}
-                    label="Predicted Grade"
-                    value={prediction.predictedGrade}
-                    className="text-primary"
-                  />
+      {/* Modal for Detailed Analysis */}
+      {expandedResultId && currentPrediction && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-base-100 rounded-lg w-full max-w-6xl max-h-screen overflow-y-auto">
+            <div className="sticky top-0 bg-base-100 p-4 border-b border-base-300 flex justify-between items-center z-10">
+              <h2 className="text-xl font-bold">
+                {currentPrediction.studentName} - Performance Analysis
+              </h2>
+              <button 
+                onClick={closeResultModal}
+                className="btn btn-ghost btn-sm text-error"
+              >
+                <FiX className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              {/* Summary Cards */}
+              <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+                <StatCard
+                  icon={<FiBarChart2 />}
+                  label="Average Score"
+                  value={`${currentPerformance.average}%`}
+                  className={getPerformanceColor(Number(currentPerformance.average))}
+                />
+                <StatCard
+                  icon={<FiAward />}
+                  label="Average Grade"
+                  value={getGrade(Number(currentPerformance.average))}
+                  className={getPerformanceColor(Number(currentPerformance.average))}
+                />
+                <StatCard
+                  icon={<FiBarChart2 />}
+                  label="GPA"
+                  value={currentPerformance.gpa}
+                  className={getGPAColor(Number(currentPerformance.gpa))}
+                />
+                <StatCard
+                  icon={<FiBarChart2 />}
+                  label="CGPA"
+                  value={currentPerformance.cgpa}
+                  className={getGPAColor(Number(currentPerformance.cgpa))}
+                />
+                <StatCard
+                  icon={<FiBook />}
+                  label="Credit Units"
+                  value={currentPerformance.totalCreditUnits}
+                />
+                <StatCard
+                  icon={<FiCalendar />}
+                  label="Predicted Grade"
+                  value={currentPrediction.predictedGrade}
+                  className="text-primary"
+                />
+              </div>
+
+              {/* Performance Analysis */}
+              <div className="divider">Performance Analysis</div>
+              
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="h-[300px] bg-base-200 rounded-lg p-4">
+                  <Radar data={getRadarData(currentPrediction)} options={radarOptions} />
                 </div>
 
-                {/* Expand/Collapse Button */}
-                <button 
-                  onClick={() => toggleExpand(prediction.id)}
-                  className="btn btn-ghost btn-sm w-full mt-4 gap-2 hover:bg-base-200"
-                >
-                  {isExpanded ? (
-                    <>
-                      <span>Show Less</span>
-                      <FiChevronUp className="w-4 h-4" />
-                    </>
-                  ) : (
-                    <>
-                      <span>View Detailed Analysis</span>
-                      <FiChevronDown className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
-
-                {/* Detailed Analysis */}
-                {isExpanded && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="mt-6 space-y-6"
-                  >
-                    <div className="divider">Performance Analysis</div>
-                    
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <div className="h-[300px] bg-base-200 rounded-lg p-4">
-                        <Radar data={getRadarData(prediction)} options={radarOptions} />
-                      </div>
-
-                      <div className="overflow-x-auto">
-                        <table className="table table-zebra w-full">
-                          <thead>
-                            <tr>
-                              <th>Subject</th>
-                              <th>First CA (20%)</th>
-                              <th>Second CA (20%)</th>
-                              <th>Exam (60%)</th>
-                              <th>Total</th>
-                              <th>Status</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {performance.subjectAnalysis.map(({ subject, firstCA, secondCA, examScore, total }) => (
-                              <tr key={subject}>
-                                <td className="font-medium">{subject}</td>
-                                <td>{firstCA}</td>
-                                <td>{secondCA}</td>
-                                <td>{examScore}</td>
-                                <td className={`font-semibold ${getPerformanceColor(total)}`}>
-                                  {total}%
-                                </td>
-                                <td>
-                                  <span className={`badge badge-sm ${total >= 50 ? 'badge-success' : 'badge-error'}`}>
-                                    {total >= 50 ? 'Pass' : 'Fail'}
-                                  </span>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-
-                    {/* Additional Analysis */}
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <div className="bg-base-200 p-4 rounded-lg">
-                        <h4 className="font-semibold mb-3 text-primary">Recommendations</h4>
-                        <ul className="space-y-2 text-sm">
-                          {prediction.suggestions.map((suggestion, index) => (
-                            <li key={index} className="flex gap-2">
-                              <span className="text-primary">•</span>
-                              {suggestion}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div className="bg-base-200 p-4 rounded-lg">
-                        <h4 className="font-semibold mb-3 text-error">Areas for Improvement</h4>
-                        <ul className="space-y-2 text-sm">
-                          {prediction.weaknesses.map((weakness, index) => (
-                            <li key={index} className="flex gap-2">
-                              <span className="text-error">•</span>
-                              {weakness}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </div>
-
-                    <div className="text-xs text-gray-500 text-right">
-                      Generated on: {performance.timestamp}
-                    </div>
-                  </motion.div>
-                )}
+                <div className="overflow-x-auto">
+                  <table className="table table-zebra w-full">
+                    <thead>
+                      <tr>
+                        <th>Subject</th>
+                        <th>First CA</th>
+                        <th>Others</th>
+                        <th>Exam</th>
+                        <th>Total</th>
+                        <th>Grade</th>
+                        <th>CU</th>
+                        <th>GP</th>
+                        <th>WP</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {currentPerformance.subjectAnalysis.map(({ subject, firstCA, secondCA, examScore, total, creditUnits, gradePoint, weightedPoints }) => (
+                        <tr key={subject}>
+                          <td className="font-medium">{subject}</td>
+                          <td>{firstCA}</td>
+                          <td>{secondCA}</td>
+                          <td>{examScore}</td>
+                          <td className={`font-semibold ${getPerformanceColor(total)}`}>
+                            {total}%
+                          </td>
+                          <td className={`font-semibold ${getPerformanceColor(total)}`}>
+                            {getGrade(total)}
+                          </td>
+                          <td>{creditUnits}</td>
+                          <td>{gradePoint.toFixed(1)}</td>
+                          <td>{weightedPoints.toFixed(1)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <td colSpan="6" className="text-right font-semibold">Total:</td>
+                        <td>{currentPerformance.totalCreditUnits}</td>
+                        <td></td>
+                        <td>{currentPerformance.totalWeightedPoints}</td>
+                      </tr>
+                      <tr>
+                        <td colSpan="6" className="text-right font-semibold">GPA:</td>
+                        <td colSpan="3" className={`font-bold ${getGPAColor(Number(currentPerformance.gpa))}`}>
+                          {currentPerformance.gpa}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td colSpan="6" className="text-right font-semibold">CGPA:</td>
+                        <td colSpan="3" className={`font-bold ${getGPAColor(Number(currentPerformance.cgpa))}`}>
+                          {currentPerformance.cgpa}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
               </div>
-            </motion.div>
-          )
-        })}
-      </AnimatePresence>
+
+              {/* Grade Scale Legend */}
+              <div className="bg-base-200 p-4 rounded-lg">
+                <h4 className="font-semibold mb-3">Grading Scale</h4>
+                <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+                  <div className="flex flex-col items-center">
+                    <span className="badge badge-lg text-success">A</span>
+                    <span className="text-xs mt-1">70-100% (5.0)</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <span className="badge badge-lg text-success">B</span>
+                    <span className="text-xs mt-1">60-69% (4.0)</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <span className="badge badge-lg text-warning">C</span>
+                    <span className="text-xs mt-1">50-59% (3.0)</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <span className="badge badge-lg text-warning">D</span>
+                    <span className="text-xs mt-1">45-49% (2.0)</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <span className="badge badge-lg text-info">E</span>
+                    <span className="text-xs mt-1">40-44% (1.0)</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <span className="badge badge-lg text-error">F</span>
+                    <span className="text-xs mt-1">0-39% (0.0)</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Analysis */}
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="bg-base-200 p-4 rounded-lg">
+                  <h4 className="font-semibold mb-3 text-primary">Recommendations</h4>
+                  <ul className="space-y-2 text-sm">
+                    {currentPrediction.suggestions.map((suggestion, index) => (
+                      <li key={index} className="flex gap-2">
+                        <span className="text-primary">•</span>
+                        {suggestion}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="bg-base-200 p-4 rounded-lg">
+                  <h4 className="font-semibold mb-3 text-error">Areas for Improvement</h4>
+                  <ul className="space-y-2 text-sm">
+                    {currentPrediction.weaknesses.map((weakness, index) => (
+                      <li key={index} className="flex gap-2">
+                        <span className="text-error">•</span>
+                        {weakness}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-4 mt-6">
+                <button
+                  onClick={() => handleDownloadPDF(currentPrediction)}
+                  className="btn btn-primary gap-2"
+                >
+                  <FiDownload className="w-4 h-4" />
+                  Download Report
+                </button>
+                <button
+                  onClick={closeResultModal}
+                  className="btn"
+                >
+                  Close
+                </button>
+              </div>
+
+              <div className="text-xs text-gray-500 text-right">
+                Generated on: {currentPerformance.timestamp}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
