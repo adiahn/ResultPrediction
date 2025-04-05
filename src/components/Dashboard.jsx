@@ -11,7 +11,6 @@ function Dashboard() {
   const [predictions, setPredictions] = useState([])
   const [activeTab, setActiveTab] = useState('manual') // 'manual' or 'excel'
 
-  // Load predictions from localStorage on component mount
   useEffect(() => {
     const savedPredictions = localStorage.getItem(`predictions_${user.username}`)
     if (savedPredictions) {

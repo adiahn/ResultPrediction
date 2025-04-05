@@ -9,7 +9,6 @@ function PrivateRoute({ children }) {
   const { user } = useAuth()
   
   if (!user) {
-    // Redirect to login if not authenticated
     return <Navigate to="/login" replace />
   }
 
@@ -20,7 +19,6 @@ function PublicRoute({ children }) {
   const { user } = useAuth()
   
   if (user) {
-    // Redirect to dashboard if already authenticated
     return <Navigate to="/" replace />
   }
 

@@ -53,8 +53,6 @@ function StudentForm({ onSubmit }) {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    
-    // Keep the original subject structure instead of just totals
     const processedSubjects = {}
     let isValid = true
 
@@ -68,8 +66,6 @@ function StudentForm({ onSubmit }) {
         toast.error(`Total score for ${subject} cannot exceed 100`)
         isValid = false
       }
-      
-      // Keep the original structure with individual scores
       processedSubjects[subject] = {
         firstCA,
         secondCA,
@@ -204,7 +200,6 @@ function StudentForm({ onSubmit }) {
         </div>
       </div>
 
-      {/* Subject Scores Card */}
       <div className="card bg-base-100 shadow-lg">
         <div className="card-body p-4">
           <h3 className="card-title text-primary text-lg mb-4">Subject Scores</h3>
@@ -222,7 +217,6 @@ function StudentForm({ onSubmit }) {
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {/* Score inputs with modern styling */}
                   <ScoreInput
                     label="First CA (20%)"
                     name={`subject-${subject}-firstCA`}

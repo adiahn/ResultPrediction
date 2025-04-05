@@ -49,7 +49,7 @@ function Login() {
               Hassan Usman Katsina Polytechnic
             </motion.h2>
             <div className="divider my-2 px-4">
-              <span className="text-sm sm:text-base text-gray-600">Result Prediction System</span>
+              <span className="text-sm sm:text-base text-gray-600">Result Processing System</span>
             </div>
           </div>
 
