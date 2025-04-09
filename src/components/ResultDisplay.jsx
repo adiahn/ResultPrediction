@@ -227,7 +227,7 @@ function ResultDisplay({ predictions, onDelete }) {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4">
         <AnimatePresence>
           {predictions.map(prediction => {
             const performance = calculateOverallPerformance(prediction)
@@ -239,12 +239,16 @@ function ResultDisplay({ predictions, onDelete }) {
                 exit={{ opacity: 0, y: -20 }}
                 className="card bg-base-100 shadow-lg"
               >
-                <div className="card-body">
-                  <div className="flex justify-between items-start">
+                <div className="card-body p-5">
+                  {/* Student info header */}
+                  <div className="flex flex-wrap md:flex-nowrap justify-between items-start gap-4 mb-4">
                     <div>
-                      <h3 className="text-lg font-semibold">{prediction.studentName}</h3>
-                      <p className="text-sm text-gray-500">ID: {prediction.studentId}</p>
-                      <p className="text-sm text-gray-500">{prediction.department} - Level {prediction.level}</p>
+                      <h3 className="text-xl font-semibold">{prediction.studentName}</h3>
+                      <div className="flex flex-wrap gap-x-4 text-sm text-gray-500 mt-1">
+                        <p>ID: {prediction.studentId}</p>
+                        <p>{prediction.department}</p>
+                        <p>Level: {prediction.level}</p>
+                      </div>
                     </div>
                     <div className="flex items-center gap-3">
                       <button
@@ -262,44 +266,84 @@ function ResultDisplay({ predictions, onDelete }) {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 mt-4">
-                    <div className="bg-base-200 p-3 rounded-lg flex flex-col">
+                  {/* Summary stats */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                    <div className="bg-base-200 p-4 rounded-lg flex flex-col">
                       <span className="text-xs font-semibold opacity-70 mb-1">GPA</span>
-                      <span className={`font-bold text-lg ${getGPAColor(Number(performance.gpa))}`}>
+                      <span className={`font-bold text-2xl ${getGPAColor(Number(performance.gpa))}`}>
                         {performance.gpa}
                       </span>
                     </div>
-                    <div className="bg-base-200 p-3 rounded-lg flex flex-col">
+                    <div className="bg-base-200 p-4 rounded-lg flex flex-col">
                       <span className="text-xs font-semibold opacity-70 mb-1">CGPA</span>
-                      <span className={`font-bold text-lg ${getGPAColor(Number(performance.cgpa))}`}>
+                      <span className={`font-bold text-2xl ${getGPAColor(Number(performance.cgpa))}`}>
                         {performance.cgpa}
                       </span>
                       {prediction.previousCGPA && (
-                        <span className="text-xs text-gray-500 mt-1">Prev: {prediction.previousCGPA}</span>
+                        <span className="text-xs text-gray-500 mt-1">Previous: {prediction.previousCGPA}</span>
                       )}
                     </div>
-                  </div>
-
-                  <div className="mt-3">
-                    <div className="text-sm font-medium mb-2">Result Summary</div>
-                    <div className="bg-base-200 p-3 rounded-lg">
-                      <div className="flex justify-between text-sm">
-                        <span>Subjects: {performance.passed + performance.failed}</span>
-                        <span>Pass Rate: {((performance.passed/(performance.passed + performance.failed)) * 100).toFixed(0)}%</span>
+                    <div className="bg-base-200 p-4 rounded-lg">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="text-xs font-semibold opacity-70">Subject Results</span>
+                        <span className="badge badge-sm">{performance.passed + performance.failed} Total</span>
                       </div>
-                      <div className="w-full bg-gray-300 rounded-full h-2 mt-2">
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="font-medium">Pass Rate: </span>
+                        <span className="font-bold">{((performance.passed/(performance.passed + performance.failed)) * 100).toFixed(0)}%</span>
+                      </div>
+                      <div className="w-full bg-gray-300 rounded-full h-2.5 mb-2">
                         <div 
-                          className="bg-primary h-2 rounded-full" 
+                          className="bg-primary h-2.5 rounded-full" 
                           style={{width: `${(performance.passed/(performance.passed + performance.failed)) * 100}%`}}
                         ></div>
                       </div>
-                      <div className="flex justify-between text-xs mt-2 text-gray-500">
-                        <span>Passed: {performance.passed}</span>
-                        <span>Failed: {performance.failed}</span>
+                      <div className="flex justify-between text-xs text-gray-600">
+                        <span>Passed: <span className="font-semibold text-success">{performance.passed}</span></span>
+                        <span>Failed: <span className="font-semibold text-error">{performance.failed}</span></span>
                       </div>
                     </div>
                   </div>
 
+                  {/* Subject summary table - for wider screens */}
+                  <div className="overflow-x-auto mt-4 hidden md:block">
+                    <table className="table table-xs table-zebra w-full">
+                      <thead>
+                        <tr>
+                          <th>Subject</th>
+                          <th>First CA</th>
+                          <th>Others</th>
+                          <th>Exam</th>
+                          <th>Total</th>
+                          <th>Grade</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {performance.subjectAnalysis.map(({ subject, firstCA, secondCA, examScore, total }) => (
+                          <tr key={subject}>
+                            <td className="font-medium">{subject}</td>
+                            <td>{firstCA}</td>
+                            <td>{secondCA}</td>
+                            <td>{examScore}</td>
+                            <td className={`font-semibold ${getPerformanceColor(total)}`}>
+                              {total}%
+                            </td>
+                            <td className={`font-semibold ${getPerformanceColor(total)}`}>
+                              {getGrade(total)}
+                            </td>
+                            <td>
+                              <span className={`badge badge-sm ${total >= 40 ? 'badge-success' : 'badge-error'}`}>
+                                {total >= 40 ? 'Pass' : 'Fail'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* View Details Button */}
                   <button 
                     onClick={() => openResultModal(prediction.id)}
                     className="btn btn-primary btn-sm w-full mt-4 gap-2"
@@ -314,13 +358,17 @@ function ResultDisplay({ predictions, onDelete }) {
         </AnimatePresence>
       </div>
 
+      {/* Modal for Detailed Analysis */}
       {expandedResultId && currentPrediction && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-base-100 rounded-lg w-full max-w-6xl max-h-screen overflow-y-auto">
             <div className="sticky top-0 bg-base-100 p-4 border-b border-base-300 flex justify-between items-center z-10">
-              <h2 className="text-xl font-bold">
-                {currentPrediction.studentName} - Performance Analysis
-              </h2>
+              <div>
+                <h2 className="text-xl font-bold">
+                  {currentPrediction.studentName} - Performance Analysis
+                </h2>
+                <p className="text-sm text-gray-500">{currentPrediction.department} - Level {currentPrediction.level} - ID: {currentPrediction.studentId}</p>
+              </div>
               <button 
                 onClick={closeResultModal}
                 className="btn btn-ghost btn-sm text-error"
@@ -330,6 +378,7 @@ function ResultDisplay({ predictions, onDelete }) {
             </div>
             
             <div className="p-6 space-y-6">
+              {/* Summary Cards */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <StatCard
                   icon={<FiBarChart2 />}
@@ -357,175 +406,208 @@ function ResultDisplay({ predictions, onDelete }) {
                 />
               </div>
 
-              <div className="divider">Results Breakdown</div>
-              
-              <div className="overflow-x-auto">
-                <table className="table table-zebra w-full">
-                  <thead>
-                    <tr>
-                      <th>Subject</th>
-                      <th>First CA</th>
-                      <th>Others</th>
-                      <th>Exam</th>
-                      <th>Total</th>
-                      <th>Grade</th>
-                      <th>CU</th>
-                      <th>GP</th>
-                      <th>WP</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {currentPerformance.subjectAnalysis.map(({ subject, firstCA, secondCA, examScore, total, creditUnits, gradePoint, weightedPoints }) => (
-                      <tr key={subject}>
-                        <td className="font-medium">{subject}</td>
-                        <td>{firstCA}</td>
-                        <td>{secondCA}</td>
-                        <td>{examScore}</td>
-                        <td className={`font-semibold ${getPerformanceColor(total)}`}>
-                          {total}%
-                        </td>
-                        <td className={`font-semibold ${getPerformanceColor(total)}`}>
-                          {getGrade(total)}
-                        </td>
-                        <td>{creditUnits}</td>
-                        <td>{gradePoint.toFixed(1)}</td>
-                        <td>{weightedPoints.toFixed(1)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot>
-                    <tr>
-                      <td colSpan="6" className="text-right font-semibold">Total:</td>
-                      <td>{currentPerformance.totalCreditUnits}</td>
-                      <td></td>
-                      <td>{currentPerformance.totalWeightedPoints}</td>
-                    </tr>
-                    <tr>
-                      <td colSpan="6" className="text-right font-semibold">GPA:</td>
-                      <td colSpan="3" className={`font-bold ${getGPAColor(Number(currentPerformance.gpa))}`}>
-                        {currentPerformance.gpa}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td colSpan="6" className="text-right font-semibold">CGPA:</td>
-                      <td colSpan="3" className={`font-bold ${getGPAColor(Number(currentPerformance.cgpa))}`}>
-                        {currentPerformance.cgpa}
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-
-              <div className="bg-base-200 p-4 rounded-lg">
-                <h4 className="font-semibold mb-3">Grading Scale</h4>
-                <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-                  <div className="flex flex-col items-center">
-                    <span className="badge badge-lg text-success">A</span>
-                    <span className="text-xs mt-1">70-100% (5.0)</span>
+              {/* Full-width Results Table */}
+              <div className="card bg-base-100 shadow-sm border border-base-300">
+                <div className="card-body p-0">
+                  <div className="p-4 bg-base-200 border-b border-base-300">
+                    <h3 className="font-semibold">Results Breakdown</h3>
                   </div>
-                  <div className="flex flex-col items-center">
-                    <span className="badge badge-lg text-success">B</span>
-                    <span className="text-xs mt-1">60-69% (4.0)</span>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <span className="badge badge-lg text-warning">C</span>
-                    <span className="text-xs mt-1">50-59% (3.0)</span>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <span className="badge badge-lg text-warning">D</span>
-                    <span className="text-xs mt-1">45-49% (2.0)</span>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <span className="badge badge-lg text-info">E</span>
-                    <span className="text-xs mt-1">40-44% (1.0)</span>
-                  </div>
-                  <div className="flex flex-col items-center">
-                    <span className="badge badge-lg text-error">F</span>
-                    <span className="text-xs mt-1">0-39% (0.0)</span>
+                  <div className="overflow-x-auto">
+                    <table className="table table-zebra w-full">
+                      <thead>
+                        <tr>
+                          <th>Subject</th>
+                          <th>First CA</th>
+                          <th>Others</th>
+                          <th>Exam</th>
+                          <th>Total</th>
+                          <th>Grade</th>
+                          <th>CU</th>
+                          <th>GP</th>
+                          <th>WP</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {currentPerformance.subjectAnalysis.map(({ subject, firstCA, secondCA, examScore, total, creditUnits, gradePoint, weightedPoints }) => (
+                          <tr key={subject}>
+                            <td className="font-medium">{subject}</td>
+                            <td>{firstCA}</td>
+                            <td>{secondCA}</td>
+                            <td>{examScore}</td>
+                            <td className={`font-semibold ${getPerformanceColor(total)}`}>
+                              {total}%
+                            </td>
+                            <td className={`font-semibold ${getPerformanceColor(total)}`}>
+                              {getGrade(total)}
+                            </td>
+                            <td>{creditUnits}</td>
+                            <td>{gradePoint.toFixed(1)}</td>
+                            <td>{weightedPoints.toFixed(1)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                      <tfoot>
+                        <tr>
+                          <td colSpan="6" className="text-right font-semibold">Total:</td>
+                          <td>{currentPerformance.totalCreditUnits}</td>
+                          <td></td>
+                          <td>{currentPerformance.totalWeightedPoints}</td>
+                        </tr>
+                        <tr>
+                          <td colSpan="6" className="text-right font-semibold">GPA:</td>
+                          <td colSpan="3" className={`font-bold ${getGPAColor(Number(currentPerformance.gpa))}`}>
+                            {currentPerformance.gpa}
+                          </td>
+                        </tr>
+                        <tr>
+                          <td colSpan="6" className="text-right font-semibold">CGPA:</td>
+                          <td colSpan="3" className={`font-bold ${getGPAColor(Number(currentPerformance.cgpa))}`}>
+                            {currentPerformance.cgpa}
+                          </td>
+                        </tr>
+                      </tfoot>
+                    </table>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-base-200 p-4 rounded-lg">
-                <h4 className="font-semibold mb-3">CGPA Calculation</h4>
-                <div className="overflow-x-auto">
-                  <table className="table table-zebra w-full">
-                    <thead>
-                      <tr>
-                        <th>Previous CGPA</th>
-                        <th>Previous Credit Units</th>
-                        <th>Current GPA</th>
-                        <th>Current Credit Units</th>
-                        <th>Cumulative GPA</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td>{currentPrediction.previousCGPA || 'N/A'}</td>
-                        <td>{currentPrediction.previousCreditUnits || 'N/A'}</td>
-                        <td>{currentPerformance.gpa}</td>
-                        <td>{currentPerformance.totalCreditUnits}</td>
-                        <td className={`font-bold ${getGPAColor(Number(currentPerformance.cgpa))}`}>
-                          {currentPerformance.cgpa}
-                        </td>
-                      </tr>
-                    </tbody>
-                    <tfoot>
-                      <tr>
-                        <td colSpan="5" className="text-xs">
+              {/* Two column layout for additional info */}
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* CGPA Calculation */}
+                <div className="card bg-base-100 shadow-sm border border-base-300">
+                  <div className="card-body p-0">
+                    <div className="p-4 bg-base-200 border-b border-base-300">
+                      <h3 className="font-semibold">CGPA Calculation</h3>
+                    </div>
+                    <div className="p-4">
+                      <table className="table table-sm w-full">
+                        <thead>
+                          <tr>
+                            <th>Previous CGPA</th>
+                            <th>Previous CU</th>
+                            <th>Current GPA</th>
+                            <th>Current CU</th>
+                            <th>Final CGPA</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td>{currentPrediction.previousCGPA || 'N/A'}</td>
+                            <td>{currentPrediction.previousCreditUnits || 'N/A'}</td>
+                            <td>{currentPerformance.gpa}</td>
+                            <td>{currentPerformance.totalCreditUnits}</td>
+                            <td className={`font-bold ${getGPAColor(Number(currentPerformance.cgpa))}`}>
+                              {currentPerformance.cgpa}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <div className="mt-3 p-2 bg-base-200 rounded-lg text-xs">
+                        <p>
                           {currentPrediction.previousCGPA ? 
                             `Formula: ((${currentPrediction.previousCGPA} × ${currentPrediction.previousCreditUnits}) + ${currentPerformance.totalWeightedPoints}) ÷ (${currentPrediction.previousCreditUnits} + ${currentPerformance.totalCreditUnits})` : 
                             "First semester CGPA equals current GPA"}
-                        </td>
-                      </tr>
-                    </tfoot>
-                  </table>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Grading Scale */}
+                <div className="card bg-base-100 shadow-sm border border-base-300">
+                  <div className="card-body p-0">
+                    <div className="p-4 bg-base-200 border-b border-base-300">
+                      <h3 className="font-semibold">Grading Scale</h3>
+                    </div>
+                    <div className="p-4">
+                      <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+                        <div className="flex flex-col items-center">
+                          <span className="badge badge-lg text-success">A</span>
+                          <span className="text-xs mt-1">70-100% (5.0)</span>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <span className="badge badge-lg text-success">B</span>
+                          <span className="text-xs mt-1">60-69% (4.0)</span>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <span className="badge badge-lg text-warning">C</span>
+                          <span className="text-xs mt-1">50-59% (3.0)</span>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <span className="badge badge-lg text-warning">D</span>
+                          <span className="text-xs mt-1">45-49% (2.0)</span>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <span className="badge badge-lg text-info">E</span>
+                          <span className="text-xs mt-1">40-44% (1.0)</span>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <span className="badge badge-lg text-error">F</span>
+                          <span className="text-xs mt-1">0-39% (0.0)</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
+              {/* Recommendations and Improvements */}
               <div className="grid md:grid-cols-2 gap-6">
-                <div className="bg-base-200 p-4 rounded-lg">
-                  <h4 className="font-semibold mb-3 text-primary">Recommendations</h4>
-                  <ul className="space-y-2 text-sm">
-                    {currentPrediction.suggestions.map((suggestion, index) => (
-                      <li key={index} className="flex gap-2">
-                        <span className="text-primary">•</span>
-                        {suggestion}
-                      </li>
-                    ))}
-                  </ul>
+                <div className="card bg-base-100 shadow-sm border border-base-300">
+                  <div className="card-body p-0">
+                    <div className="p-4 bg-base-200 border-b border-base-300">
+                      <h3 className="font-semibold text-primary">Recommendations</h3>
+                    </div>
+                    <div className="p-4">
+                      <ul className="space-y-2 text-sm">
+                        {currentPrediction.suggestions.map((suggestion, index) => (
+                          <li key={index} className="flex gap-2">
+                            <span className="text-primary">•</span>
+                            {suggestion}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
                 </div>
-                <div className="bg-base-200 p-4 rounded-lg">
-                  <h4 className="font-semibold mb-3 text-error">Areas for Improvement</h4>
-                  <ul className="space-y-2 text-sm">
-                    {currentPrediction.weaknesses.map((weakness, index) => (
-                      <li key={index} className="flex gap-2">
-                        <span className="text-error">•</span>
-                        {weakness}
-                      </li>
-                    ))}
-                  </ul>
+                <div className="card bg-base-100 shadow-sm border border-base-300">
+                  <div className="card-body p-0">
+                    <div className="p-4 bg-base-200 border-b border-base-300">
+                      <h3 className="font-semibold text-error">Areas for Improvement</h3>
+                    </div>
+                    <div className="p-4">
+                      <ul className="space-y-2 text-sm">
+                        {currentPrediction.weaknesses.map((weakness, index) => (
+                          <li key={index} className="flex gap-2">
+                            <span className="text-error">•</span>
+                            {weakness}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex justify-end gap-4 mt-6">
-                <button
-                  onClick={() => handleDownloadPDF(currentPrediction)}
-                  className="btn btn-primary gap-2"
-                >
-                  <FiDownload className="w-4 h-4" />
-                  Download Report
-                </button>
-                <button
-                  onClick={closeResultModal}
-                  className="btn"
-                >
-                  Close
-                </button>
-              </div>
-
-              <div className="text-xs text-gray-500 text-right">
-                Generated on: {currentPerformance.timestamp}
+              <div className="flex justify-between items-center mt-6">
+                <div className="text-xs text-gray-500">
+                  Generated on: {currentPerformance.timestamp}
+                </div>
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => handleDownloadPDF(currentPrediction)}
+                    className="btn btn-primary gap-2"
+                  >
+                    <FiDownload className="w-4 h-4" />
+                    Download Report
+                  </button>
+                  <button
+                    onClick={closeResultModal}
+                    className="btn"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
             </div>
           </div>
