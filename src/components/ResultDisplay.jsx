@@ -1,28 +1,9 @@
 import { saveAs } from 'file-saver'
 import { motion, AnimatePresence } from 'framer-motion'
-import {
-  Chart as ChartJS,
-  RadialLinearScale,
-  PointElement,
-  LineElement,
-  Filler,
-  Tooltip,
-  Legend,
-} from 'chart.js'
-import { Radar } from 'react-chartjs-2'
 import jsPDF from 'jspdf'
 import 'jspdf-autotable'
-import { FiDownload, FiTrash2, FiAward, FiBarChart2, FiBook, FiCalendar, FiChevronDown, FiChevronUp, FiX } from 'react-icons/fi'
+import { FiDownload, FiTrash2, FiAward, FiBarChart2, FiChevronDown, FiX } from 'react-icons/fi'
 import { useState } from 'react'
-
-ChartJS.register(
-  RadialLinearScale,
-  PointElement,
-  LineElement,
-  Filler,
-  Tooltip,
-  Legend
-)
 
 function ResultDisplay({ predictions, onDelete }) {
   const [expandedResultId, setExpandedResultId] = useState(null)
@@ -68,7 +49,7 @@ function ResultDisplay({ predictions, onDelete }) {
     return 0.0
   }
 
-  const calculateCreditUnits = (subject) => {
+  const calculateCreditUnits = () => {
     // Default credit unit value (could be customized based on actual subject data)
     return 3
   }
@@ -76,7 +57,7 @@ function ResultDisplay({ predictions, onDelete }) {
   const calculateOverallPerformance = (prediction) => {
     const subjectScores = Object.entries(prediction.subjects).map(([subject, scores]) => {
       const total = calculateTotalScore(scores)
-      const creditUnits = calculateCreditUnits(subject)
+      const creditUnits = calculateCreditUnits()
       const gradePoint = getGradePoint(total)
       const weightedPoints = gradePoint * creditUnits
       
@@ -143,7 +124,7 @@ function ResultDisplay({ predictions, onDelete }) {
 
   const handleDownloadCSV = () => {
     const csvContent = [
-      ['Student Name', 'Student ID', 'Department', 'Level', 'GPA', 'CGPA', 'Predicted Grade', 'Attendance', ...Object.keys(predictions[0].subjects), 'Suggestions', 'Weaknesses', 'Timestamp'].join(','),
+      ['Student Name', 'Student ID', 'Department', 'Level', 'Previous CGPA', 'Previous Credit Units', 'GPA', 'CGPA', 'Predicted Grade', 'Attendance', ...Object.keys(predictions[0].subjects), 'Suggestions', 'Weaknesses', 'Timestamp'].join(','),
       ...predictions.map(p => {
         const performance = calculateOverallPerformance(p)
         return [
@@ -151,6 +132,8 @@ function ResultDisplay({ predictions, onDelete }) {
           p.studentId,
           p.department,
           p.level,
+          p.previousCGPA || '',
+          p.previousCreditUnits || '',
           performance.gpa,
           performance.cgpa,
           p.predictedGrade,
@@ -185,6 +168,12 @@ function ResultDisplay({ predictions, onDelete }) {
     doc.text(`CGPA: ${performance.cgpa}`, 110, 70)
     doc.text(`Predicted Grade: ${prediction.predictedGrade}`, 20, 80)
     
+    // Add previous CGPA info if available
+    if (prediction.previousCGPA) {
+      doc.text(`Previous CGPA: ${prediction.previousCGPA}`, 110, 80)
+      doc.text(`Previous Credit Units: ${prediction.previousCreditUnits}`, 110, 90)
+    }
+    
     // Add subject scores
     const tableData = performance.subjectAnalysis.map(subjectData => {
       return [
@@ -213,36 +202,12 @@ function ResultDisplay({ predictions, onDelete }) {
     doc.text(`CGPA: ${performance.cgpa}`, 80, finalY)
     doc.text(`Total Credit Units: ${performance.totalCreditUnits}`, 140, finalY)
     
+    // Add CGPA calculation explanation
+    if (prediction.previousCGPA) {
+      doc.text(`CGPA Calculation: ((${prediction.previousCGPA} × ${prediction.previousCreditUnits}) + ${performance.totalWeightedPoints}) ÷ (${prediction.previousCreditUnits} + ${performance.totalCreditUnits})`, 20, finalY + 10)
+    }
+    
     doc.save(`${prediction.studentName}_report.pdf`)
-  }
-
-  const getRadarData = (prediction) => ({
-    labels: Object.keys(prediction.subjects),
-    datasets: [{
-      label: 'Subject Scores',
-      data: Object.values(prediction.subjects).map(subject => 
-        Number(subject.firstCA) + Number(subject.secondCA) + Number(subject.score)
-      ),
-      backgroundColor: 'rgba(34, 197, 94, 0.2)',
-      borderColor: 'rgb(34, 197, 94)',
-      borderWidth: 2,
-      pointBackgroundColor: 'rgb(34, 197, 94)',
-    }]
-  })
-
-  const radarOptions = {
-    scales: {
-      r: {
-        beginAtZero: true,
-        max: 100,
-        ticks: { stepSize: 20 },
-        grid: { color: 'rgba(0, 0, 0, 0.1)' },
-      }
-    },
-    plugins: {
-      legend: { position: 'top' },
-    },
-    maintainAspectRatio: false,
   }
 
   const currentPrediction = expandedResultId ? 
@@ -266,8 +231,6 @@ function ResultDisplay({ predictions, onDelete }) {
         <AnimatePresence>
           {predictions.map(prediction => {
             const performance = calculateOverallPerformance(prediction)
-            const averageGrade = getGrade(Number(performance.average))
-
             return (
               <motion.div
                 key={prediction.id}
@@ -299,28 +262,44 @@ function ResultDisplay({ predictions, onDelete }) {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
-                    <StatCard
-                      icon={<FiBarChart2 />}
-                      label="GPA"
-                      value={performance.gpa}
-                      className={getGPAColor(Number(performance.gpa))}
-                    />
-                    <StatCard
-                      icon={<FiBarChart2 />}
-                      label="CGPA"
-                      value={performance.cgpa}
-                      className={getGPAColor(Number(performance.cgpa))}
-                    />
-                    <StatCard
-                      icon={<FiAward />}
-                      label="Subjects Status"
-                      value={`${performance.passed}/${performance.passed + performance.failed}`}
-                      subtext={`${((performance.passed/(performance.passed + performance.failed)) * 100).toFixed(1)}% Pass Rate`}
-                    />
+                  <div className="grid grid-cols-2 gap-4 mt-4">
+                    <div className="bg-base-200 p-3 rounded-lg flex flex-col">
+                      <span className="text-xs font-semibold opacity-70 mb-1">GPA</span>
+                      <span className={`font-bold text-lg ${getGPAColor(Number(performance.gpa))}`}>
+                        {performance.gpa}
+                      </span>
+                    </div>
+                    <div className="bg-base-200 p-3 rounded-lg flex flex-col">
+                      <span className="text-xs font-semibold opacity-70 mb-1">CGPA</span>
+                      <span className={`font-bold text-lg ${getGPAColor(Number(performance.cgpa))}`}>
+                        {performance.cgpa}
+                      </span>
+                      {prediction.previousCGPA && (
+                        <span className="text-xs text-gray-500 mt-1">Prev: {prediction.previousCGPA}</span>
+                      )}
+                    </div>
                   </div>
 
-                  {/* View Details Button */}
+                  <div className="mt-3">
+                    <div className="text-sm font-medium mb-2">Result Summary</div>
+                    <div className="bg-base-200 p-3 rounded-lg">
+                      <div className="flex justify-between text-sm">
+                        <span>Subjects: {performance.passed + performance.failed}</span>
+                        <span>Pass Rate: {((performance.passed/(performance.passed + performance.failed)) * 100).toFixed(0)}%</span>
+                      </div>
+                      <div className="w-full bg-gray-300 rounded-full h-2 mt-2">
+                        <div 
+                          className="bg-primary h-2 rounded-full" 
+                          style={{width: `${(performance.passed/(performance.passed + performance.failed)) * 100}%`}}
+                        ></div>
+                      </div>
+                      <div className="flex justify-between text-xs mt-2 text-gray-500">
+                        <span>Passed: {performance.passed}</span>
+                        <span>Failed: {performance.failed}</span>
+                      </div>
+                    </div>
+                  </div>
+
                   <button 
                     onClick={() => openResultModal(prediction.id)}
                     className="btn btn-primary btn-sm w-full mt-4 gap-2"
@@ -335,7 +314,6 @@ function ResultDisplay({ predictions, onDelete }) {
         </AnimatePresence>
       </div>
 
-      {/* Modal for Detailed Analysis */}
       {expandedResultId && currentPrediction && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-base-100 rounded-lg w-full max-w-6xl max-h-screen overflow-y-auto">
@@ -352,8 +330,7 @@ function ResultDisplay({ predictions, onDelete }) {
             </div>
             
             <div className="p-6 space-y-6">
-              {/* Summary Cards */}
-              <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <StatCard
                   icon={<FiBarChart2 />}
                   label="Average Score"
@@ -378,86 +355,67 @@ function ResultDisplay({ predictions, onDelete }) {
                   value={currentPerformance.cgpa}
                   className={getGPAColor(Number(currentPerformance.cgpa))}
                 />
-                <StatCard
-                  icon={<FiBook />}
-                  label="Credit Units"
-                  value={currentPerformance.totalCreditUnits}
-                />
-                <StatCard
-                  icon={<FiCalendar />}
-                  label="Predicted Grade"
-                  value={currentPrediction.predictedGrade}
-                  className="text-primary"
-                />
               </div>
 
-              {/* Performance Analysis */}
-              <div className="divider">Performance Analysis</div>
+              <div className="divider">Results Breakdown</div>
               
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="h-[300px] bg-base-200 rounded-lg p-4">
-                  <Radar data={getRadarData(currentPrediction)} options={radarOptions} />
-                </div>
-
-                <div className="overflow-x-auto">
-                  <table className="table table-zebra w-full">
-                    <thead>
-                      <tr>
-                        <th>Subject</th>
-                        <th>First CA</th>
-                        <th>Others</th>
-                        <th>Exam</th>
-                        <th>Total</th>
-                        <th>Grade</th>
-                        <th>CU</th>
-                        <th>GP</th>
-                        <th>WP</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {currentPerformance.subjectAnalysis.map(({ subject, firstCA, secondCA, examScore, total, creditUnits, gradePoint, weightedPoints }) => (
-                        <tr key={subject}>
-                          <td className="font-medium">{subject}</td>
-                          <td>{firstCA}</td>
-                          <td>{secondCA}</td>
-                          <td>{examScore}</td>
-                          <td className={`font-semibold ${getPerformanceColor(total)}`}>
-                            {total}%
-                          </td>
-                          <td className={`font-semibold ${getPerformanceColor(total)}`}>
-                            {getGrade(total)}
-                          </td>
-                          <td>{creditUnits}</td>
-                          <td>{gradePoint.toFixed(1)}</td>
-                          <td>{weightedPoints.toFixed(1)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                    <tfoot>
-                      <tr>
-                        <td colSpan="6" className="text-right font-semibold">Total:</td>
-                        <td>{currentPerformance.totalCreditUnits}</td>
-                        <td></td>
-                        <td>{currentPerformance.totalWeightedPoints}</td>
-                      </tr>
-                      <tr>
-                        <td colSpan="6" className="text-right font-semibold">GPA:</td>
-                        <td colSpan="3" className={`font-bold ${getGPAColor(Number(currentPerformance.gpa))}`}>
-                          {currentPerformance.gpa}
+              <div className="overflow-x-auto">
+                <table className="table table-zebra w-full">
+                  <thead>
+                    <tr>
+                      <th>Subject</th>
+                      <th>First CA</th>
+                      <th>Others</th>
+                      <th>Exam</th>
+                      <th>Total</th>
+                      <th>Grade</th>
+                      <th>CU</th>
+                      <th>GP</th>
+                      <th>WP</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentPerformance.subjectAnalysis.map(({ subject, firstCA, secondCA, examScore, total, creditUnits, gradePoint, weightedPoints }) => (
+                      <tr key={subject}>
+                        <td className="font-medium">{subject}</td>
+                        <td>{firstCA}</td>
+                        <td>{secondCA}</td>
+                        <td>{examScore}</td>
+                        <td className={`font-semibold ${getPerformanceColor(total)}`}>
+                          {total}%
                         </td>
-                      </tr>
-                      <tr>
-                        <td colSpan="6" className="text-right font-semibold">CGPA:</td>
-                        <td colSpan="3" className={`font-bold ${getGPAColor(Number(currentPerformance.cgpa))}`}>
-                          {currentPerformance.cgpa}
+                        <td className={`font-semibold ${getPerformanceColor(total)}`}>
+                          {getGrade(total)}
                         </td>
+                        <td>{creditUnits}</td>
+                        <td>{gradePoint.toFixed(1)}</td>
+                        <td>{weightedPoints.toFixed(1)}</td>
                       </tr>
-                    </tfoot>
-                  </table>
-                </div>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td colSpan="6" className="text-right font-semibold">Total:</td>
+                      <td>{currentPerformance.totalCreditUnits}</td>
+                      <td></td>
+                      <td>{currentPerformance.totalWeightedPoints}</td>
+                    </tr>
+                    <tr>
+                      <td colSpan="6" className="text-right font-semibold">GPA:</td>
+                      <td colSpan="3" className={`font-bold ${getGPAColor(Number(currentPerformance.gpa))}`}>
+                        {currentPerformance.gpa}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td colSpan="6" className="text-right font-semibold">CGPA:</td>
+                      <td colSpan="3" className={`font-bold ${getGPAColor(Number(currentPerformance.cgpa))}`}>
+                        {currentPerformance.cgpa}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
               </div>
 
-              {/* Grade Scale Legend */}
               <div className="bg-base-200 p-4 rounded-lg">
                 <h4 className="font-semibold mb-3">Grading Scale</h4>
                 <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
@@ -488,7 +446,43 @@ function ResultDisplay({ predictions, onDelete }) {
                 </div>
               </div>
 
-              {/* Additional Analysis */}
+              <div className="bg-base-200 p-4 rounded-lg">
+                <h4 className="font-semibold mb-3">CGPA Calculation</h4>
+                <div className="overflow-x-auto">
+                  <table className="table table-zebra w-full">
+                    <thead>
+                      <tr>
+                        <th>Previous CGPA</th>
+                        <th>Previous Credit Units</th>
+                        <th>Current GPA</th>
+                        <th>Current Credit Units</th>
+                        <th>Cumulative GPA</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>{currentPrediction.previousCGPA || 'N/A'}</td>
+                        <td>{currentPrediction.previousCreditUnits || 'N/A'}</td>
+                        <td>{currentPerformance.gpa}</td>
+                        <td>{currentPerformance.totalCreditUnits}</td>
+                        <td className={`font-bold ${getGPAColor(Number(currentPerformance.cgpa))}`}>
+                          {currentPerformance.cgpa}
+                        </td>
+                      </tr>
+                    </tbody>
+                    <tfoot>
+                      <tr>
+                        <td colSpan="5" className="text-xs">
+                          {currentPrediction.previousCGPA ? 
+                            `Formula: ((${currentPrediction.previousCGPA} × ${currentPrediction.previousCreditUnits}) + ${currentPerformance.totalWeightedPoints}) ÷ (${currentPrediction.previousCreditUnits} + ${currentPerformance.totalCreditUnits})` : 
+                            "First semester CGPA equals current GPA"}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="bg-base-200 p-4 rounded-lg">
                   <h4 className="font-semibold mb-3 text-primary">Recommendations</h4>

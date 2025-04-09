@@ -17,6 +17,8 @@ function StudentForm({ onSubmit }) {
     department: '',
     level: '',
     attendance: '',
+    previousCGPA: '',
+    previousCreditUnits: '',
     subjects: SUBJECTS.reduce((acc, subject) => ({
       ...acc,
       [subject]: {
@@ -95,6 +97,8 @@ function StudentForm({ onSubmit }) {
       department: '',
       level: '',
       attendance: '',
+      previousCGPA: '',
+      previousCreditUnits: '',
       subjects: SUBJECTS.reduce((acc, subject) => ({
         ...acc,
         [subject]: {
@@ -194,6 +198,38 @@ function StudentForm({ onSubmit }) {
                 className="input input-bordered input-sm focus:input-primary bg-gray-50"
                 placeholder="Enter attendance %"
                 required
+              />
+            </div>
+
+            <div className="form-control">
+              <label className="label py-1">
+                <span className="label-text text-sm font-medium">Previous CGPA</span>
+              </label>
+              <input
+                type="number"
+                name="previousCGPA"
+                value={formData.previousCGPA}
+                onChange={handleChange}
+                min="0"
+                max="5"
+                step="0.01"
+                className="input input-bordered input-sm focus:input-primary bg-gray-50"
+                placeholder="Enter previous CGPA (if any)"
+              />
+            </div>
+
+            <div className="form-control">
+              <label className="label py-1">
+                <span className="label-text text-sm font-medium">Previous Credit Units</span>
+              </label>
+              <input
+                type="number"
+                name="previousCreditUnits"
+                value={formData.previousCreditUnits}
+                onChange={handleChange}
+                min="0"
+                className="input input-bordered input-sm focus:input-primary bg-gray-50"
+                placeholder="Enter previous credit units"
               />
             </div>
           </div>
